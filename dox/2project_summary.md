@@ -10,16 +10,17 @@
 - **CI/CD:** GitHub Actions or GitLab CI for linting, tests, and deployment.
 - **Deployment:** Dockerized, with cloud deployment (AWS ECS, Azure Container Apps, or GCP Cloud Run).
 - **Security:** Use HTTPS, environment-based secrets, audit logging, and follow GDPR/PCI guidelines.
+- **Professional UI:** A wizard-driven web UI for onboarding and integrating new PMS, including mapping review and test runs.
 
 ## 2. Key Components & Flow
-- **API Gateway:** `/pms/{pmscode}` endpoint, accepts JSON/XML/GraphQL/SOAP, with authentication and logging.
+- **API Gateway:** `/pms/{pmscode}` endpoint, accepts JSON/XML/GraphQL/SOAP, with authentication (basic, bearer, API key) and logging.
 - **PMS Plugin System:** Each PMS has its own folder with translator, mappings, and tests. Auto-discovery via decorators or entry-points.
 - **Mapping Knowledge Base:** YAML file per PMS, GenAI-augmented, with all RGBridge tags/attributes and mappings.
 - **Validation:** Incoming PMS schema validation and outgoing RGBridge XSD validation.
 - **Translation:** Mapping file + GenAI for transformation, with utilities for date/currency/LOS pattern parsing.
 - **Outbound Push:** HTTP POST to internal API (XML, basic auth, retry logic, error handling, acknowledgement).
 - **Testing:** Unit and integration tests for translators and end-to-end flow.
-- **Documentation & UI:** Auto-generated API docs, onboarding docs, optional web UI for mapping review.
+- **Documentation & UI:** Auto-generated API docs, onboarding docs, and a professional UI wizard for PMS integration.
 
 ## 3. GenAI Usage
 - **Mapping Suggestion:** Use OpenAI to suggest mappings from PMS schema to RGBridge.
@@ -30,7 +31,7 @@
 ## 4. Professional Practices
 - **Code Quality:** Type hints, docstrings, linting, pre-commit hooks.
 - **Security:** No sensitive data in logs, encrypted secrets, regular dependency updates.
-- **Extensibility:** New PMS = new folder + plugin, no codebase changes needed.
+- **Extensibility:** New PMS = new folder + plugin, no codebase changes needed. PMS-specific translators are plug-and-play via plugin system or class inheritance.
 - **Compliance:** Data minimization, right-to-erasure, audit logs, PCI-compliant storage if handling card data.
 - **Monitoring:** Health checks, error alerts, request tracing.
 
@@ -40,11 +41,12 @@
 3. Build the Plugin System: Base translator class, auto-discovery, example PMS plugin.
 4. Integrate GenAI: Script to analyze PMS schema and suggest mappings.
 5. Develop API Gateway: Endpoint, request validation, plugin invocation, outbound push.
-6. Testing & CI/CD: Set up pytest, sample tests, and CI pipeline.
-7. Documentation: README, API docs, onboarding guide.
+6. Develop Professional UI: Wizard for PMS onboarding, mapping review, and test runs.
+7. Testing & CI/CD: Set up pytest, sample tests, and CI pipeline.
+8. Documentation: README, API docs, onboarding guide.
 
 ## 6. Optional Enhancements
-- Web UI for mapping review, test runs, and plugin management.
+- Web UI for mapping review, test runs, and plugin management (now a core requirement).
 - Admin API for plugin registration, mapping updates, and logs.
 - Self-service onboarding for PMS vendors to upload schema and get instant mapping suggestions.
 
