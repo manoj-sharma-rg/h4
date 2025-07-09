@@ -244,51 +244,51 @@ Our system works on RGBridge Format that supports following messages:
 </OTA_HotelARINotifRQ>
 
 
-We integrate new PMS with our system. I want to automate this.   
+We integrate new PMS with our system. I want to automate this, use GenAI (like openai api).   
 1. For each PMS we have individual api gateway like https://baseendpoint/pmscode.
-2. Request message in PMS format are received on api gateway.
-3. Their custom messages are translated to our RGBridge format.
-4. Our standard RGBridge format message is pushed to our API.
+2. api gateway authentication may be basic, bearer, api key.
+3. Request message in PMS format are received on api gateway.
+4. Their custom messages are translated to our RGBridge format defined above.
+5. If PMS supports separate Availability and Rate message, 
+then received Availability message is translated to RGBridge Availability message,
+and received Rate massage is translated to RGBridge Rate format message.
+6. If PMS supports Combined message, then that single message is translated to RGBridge Combined message format.
+7. Our standard RGBridge formatted message is pushed to our API.
 
 Your task is to
 1. Understand RGBridge format.
-2. Make knowledge base that will maintain all attributes / tags of RGBridge format.
-3. Knowledge base will store mapping of RGBridge attributes etc with PMS message attributes.
-4. When new PMS is to be integrated 2 PMS specific translator methods are to added in existing code base.
-5. One method each for above 2 sample types will read attribute values from PMS message.
-6. Then a common method will create RGBridge message with values came from PMS message.
-
+2. Make knowledge base that will maintain all attributes / tags of RGBridge format messages.
+3. When new PMS is to be integrated, a new folder with that pmscode should be created under fixed folder 'pms'. 
+4. in this newly creade folder, translator file and mappings file for that pms will be generated.
+5. new pms specs documentation provided will be analysed and used as reference throughout the integration process. 
+6. you will use genai to detect transformation.
+7. Create a professional UI with wizard to integrate new PMS.
 
 Following points need to be considered.
 
-Incoming message format from each PMS may be one of JSON or XML or graphQL.
+Incoming message format from each PMS may be one of JSON or XML or graphQL or soap.
 Each PMS has its own format. structure of PMS messages always known in advance.
 Incoming message schema validation is needed.
-Mapping knowledge base may be stored as a static file (e.g. YAML) PMS wise or a common database (e.g. SQLite, PostgreSQL).
-Mappings are static. obvious one are auto detected. Not clear mappigs are asked.
-Mapping files may include direct attribute mappigs only.
-Mappigs transformation logic (e.g., value conversion functions)
-Invocation Flow initially each API Gateway (e.g., /pmscode) interpreter running within a monolithic app.
-
+Mapping knowledge base will be stored as a static file (e.g. YAML) PMS wise.
+To register a new PMS translator auto-discover via decorators/class-based plugin system.
+Mappings are static. obvious ones are auto detected. You may use openAI call to detect unclear mappings. Not clear mappings are asked.
+Invocation Flow : each API Gateway (e.g., /pmscode) interpreter running within a monolithic app.
 Translation Function Should validate incoming PMS payloads too.
 we may have common utilities to parse standard date formats, currency, flags (e.g., LOS pattern to boolean).
-Generated RGBridge message to be pushed to our internal API endpoint asa n HTTP POST with XML payload.
+Generated RGBridge message to be pushed to our internal API endpoint as an HTTP POST with XML payload using basic authentication.
 Error handling/acknowledgement is expected. Retry logic is expected.
-We convert PMS LOS formats to RG’s FullPatternLOS format if not already in binary.
-For RestrictionStatus values, should unsupported or unknown statuses are to be skipped.
-To register a new PMS translator auto-discover via decorators/class-based plugin system.
-
-Programming Language & Framework Python with FastAPI may be considered.
+Programming Language & Framework: Python with FastAPI may be considered.
 code includes the API gateway endpoint (e.g., a REST API that receives PMS messages).
 code handles authentication, logging, or error handling for incoming requests.
 The protocol for pushing the translated RGBridge message to our API is HTTP POST.
-Is there a specific endpoint, authentication, or response handling required?
-Extensibility for New PMS : PMS-specific translator methods should be plug-and-play (e.g., via a plugin system or class inheritance).
-Automated tests (unit/integration) for the translators and mapping logic?
-System should validate the generated RGBridge messages against an XSD/schema?
+Extensibility for New PMS : PMS-specific translator methods should be plug-and-play (e.g., via a plugin system or class inheritance). a new folder for each PMS.
+Automated tests (unit/integration) for the translators and mapping logic.
+System should validate the generated RGBridge messages against an XSD/schema.
+follow gdpr and pci guidelines.
 This is a standalone service.
 CI/CD and cloud deployment.
 
-We want to do analysis, development, testing, deployment with good user interface and documentation. 
+We want to do analysis, development, testing, deployment with best professional user interface and documentation. 
+you may incorporate apenai calls whereever needed.
 
  
