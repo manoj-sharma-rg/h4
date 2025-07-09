@@ -1,0 +1,22 @@
+created file 1prompt.txt
+generated files from 2... to 14...
+created this file 15steps.txt
+
+scaffolding structure
+Initializing Python:    python -m venv env312 & env312\Scripts\activate & pip install fastapi uvicorn pydantic httpx pluggy PyYAML xmlschema python-dateutil
+FastAPI app scaffold
+run app: uvicorn app.main:app --reload
+
+backend development (e.g., plugin system, mapping, validation)
+
+==
+ and Node.js projects (requirements.txt, package.json)
+Adding minimal FastAPI and React app scaffolds
+Filling in the base classes and sample plugin
+Setting up the CI/CD pipeline
+
+
+
+
+
+
