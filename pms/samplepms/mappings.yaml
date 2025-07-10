@@ -1,0 +1,5 @@
+# Sample mapping for samplepms
+pms_field_1: rgbridge_field_1
+pms_field_2: rgbridge_field_2
+pms_field_3:
+  nested: rgbridge_nested_field

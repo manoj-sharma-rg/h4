@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+httpx
+pluggy
+PyYAML
+xmlschema
+python-dateutil
+tenacity

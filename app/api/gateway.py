@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
 import logging
 from app.plugins.manager import PluginManager
+from app.outbound.sender import send_rgbridge_message
 
 router = APIRouter()
 logger = logging.getLogger("gateway_api")
@@ -20,8 +21,26 @@ async def receive_pms_message(pmscode: str, request: Request):
 
     result = plugin.translate(body)
     logger.info(f"Translation successful for PMS '{pmscode}'")
+
+    # Convert result to XML (stub for now)
+    xml_payload = f'<RGBridge><PMSCode>{pmscode}</PMSCode>'
+    for k, v in result.items():
+        xml_payload += f'<{k}>{v}</{k}>'
+    xml_payload += '</RGBridge>'
+    logger.info(f"Generated XML payload: {xml_payload}")
+
+    # Send to outbound delivery
+    try:
+        status_code, response_text = send_rgbridge_message(xml_payload)
+        logger.info(f"Outbound delivery status: {status_code}")
+    except Exception as e:
+        logger.error(f"Outbound delivery failed: {e}")
+        raise HTTPException(status_code=502, detail="Failed to deliver RGBridge message")
+
     return {
         "pmscode": pmscode,
         "result": result,
-        "message": "Translation completed."
+        "outbound_status": status_code,
+        "outbound_response": response_text,
+        "message": "Translation and delivery completed."
     }
