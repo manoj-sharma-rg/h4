@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Stepper, Step, StepLabel, Button, Box, Typography, TextField, CircularProgress, Alert } from '@mui/material';
+import { Stepper, Step, StepLabel, Button, Box, Typography, TextField, CircularProgress, Alert, Snackbar } from '@mui/material';
+import MappingEditor from './MappingEditor';
 
 const steps = ['Enter PMS Code', 'Review Mapping', 'Test Translation'];
 
@@ -11,9 +12,11 @@ export default function OnboardingWizard() {
   const [translationResult, setTranslationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const handleNext = async () => {
     setError(null);
+    setSuccess(null);
     if (activeStep === 0 && pmsCode) {
       setLoading(true);
       try {
@@ -51,7 +54,32 @@ export default function OnboardingWizard() {
 
   const handleBack = () => {
     setError(null);
+    setSuccess(null);
     setActiveStep((prev) => prev - 1);
+  };
+
+  const handleMappingChange = (newMapping) => {
+    setMapping(newMapping);
+  };
+
+  const handleMappingSave = async (newMapping) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`/mapping/${pmsCode}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMapping),
+      });
+      if (!res.ok) throw new Error('Failed to save mapping');
+      setSuccess('Mapping saved successfully!');
+      setMapping(newMapping);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,6 +91,7 @@ export default function OnboardingWizard() {
       </Stepper>
       <Box sx={{ mt: 4 }}>
         {error && <Alert severity="error">{error}</Alert>}
+        {success && <Snackbar open autoHideDuration={3000} onClose={() => setSuccess(null)} message={success} />}
         {activeStep === 0 && (
           <Box>
             <TextField
@@ -75,9 +104,14 @@ export default function OnboardingWizard() {
         )}
         {activeStep === 1 && (
           <Box>
-            <Typography variant="h6">Mapping Editor (placeholder)</Typography>
-            {loading ? <CircularProgress /> : <pre>{JSON.stringify(mapping, null, 2)}</pre>}
-            {/* TODO: Add editable mapping table/form */}
+            <Typography variant="h6">Mapping Editor</Typography>
+            {loading ? <CircularProgress /> : (
+              <MappingEditor
+                mapping={mapping}
+                onChange={handleMappingChange}
+                onSave={handleMappingSave}
+              />
+            )}
           </Box>
         )}
         {activeStep === 2 && (

@@ -57,3 +57,13 @@ async def get_mapping(pmscode: str):
     except Exception as e:
         logger.error(f"Error loading mapping for PMS '{pmscode}': {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.put("/mapping/{pmscode}")
+async def put_mapping(pmscode: str, request: Request):
+    try:
+        mapping = await request.json()
+        MappingManager.save_mapping(pmscode, mapping)
+        return {"status": "success", "message": f"Mapping for PMS '{pmscode}' saved."}
+    except Exception as e:
+        logger.error(f"Failed to save mapping for PMS '{pmscode}': {e}")
+        raise HTTPException(status_code=500, detail="Failed to save mapping")
