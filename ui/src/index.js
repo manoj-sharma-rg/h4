@@ -4,12 +4,15 @@ import './index.css';
 import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import theme from './theme';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
+  <ThemeProvider theme={theme}>
+    <CssBaseline />
     <App />
-  </React.StrictMode>
+  </ThemeProvider>
 );
 
 // If you want your app to work offline and load faster, you can change

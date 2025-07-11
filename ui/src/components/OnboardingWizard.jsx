@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { Stepper, Step, StepLabel, Button, Box, Typography, TextField, CircularProgress, Alert, Snackbar } from '@mui/material';
+import {
+  Stepper, Step, StepLabel, Button, Box, Typography, TextField, CircularProgress, Alert, Snackbar, Card, CardContent
+} from '@mui/material';
+import { Assignment, ListAlt, CheckCircle } from '@mui/icons-material';
 import MappingEditor from './MappingEditor';
 
-const steps = ['Enter PMS Code', 'Review Mapping', 'Test Translation'];
+const steps = [
+  { label: 'Enter PMS Code', icon: <Assignment color="primary" /> },
+  { label: 'Review Mapping', icon: <ListAlt color="secondary" /> },
+  { label: 'Test Translation', icon: <CheckCircle color="success" /> }
+];
 
 export default function OnboardingWizard() {
   const [activeStep, setActiveStep] = useState(0);
@@ -22,7 +29,6 @@ export default function OnboardingWizard() {
     if (activeStep === 0 && pmsCode) {
       setLoading(true);
       try {
-        // Fetch mapping from backend (assume GET /mapping/{pmsCode})
         const res = await fetch(`/mapping/${pmsCode}`);
         if (!res.ok) throw new Error('Mapping not found');
         const data = await res.json();
@@ -36,7 +42,6 @@ export default function OnboardingWizard() {
     if (activeStep === 2 && testMessage) {
       setLoading(true);
       try {
-        // Call backend /pms/{pmsCode} with testMessage
         const res = await fetch(`/pms/${pmsCode}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -93,76 +98,97 @@ export default function OnboardingWizard() {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto', mt: 4 }}>
-      <Stepper activeStep={activeStep} alternativeLabel>
-        {steps.map((label) => (
-          <Step key={label}><StepLabel>{label}</StepLabel></Step>
-        ))}
-      </Stepper>
-      <Box sx={{ mt: 4 }}>
-        {error && <Alert severity="error">{error}</Alert>}
-        {success && <Snackbar open autoHideDuration={3000} onClose={() => setSuccess(null)} message={success} />}
-        {activeStep === 0 && (
-          <Box>
-            <TextField
-              label="PMS Code"
-              value={pmsCode}
-              onChange={(e) => setPmsCode(e.target.value)}
-              fullWidth
-            />
-          </Box>
-        )}
-        {activeStep === 1 && (
-          <Box>
-            <Typography variant="h6">Mapping Editor</Typography>
-            {loading ? <CircularProgress /> : (
-              <MappingEditor
-                mapping={mapping}
-                onChange={handleMappingChange}
-                onSave={handleMappingSave}
+    <Box
+      sx={{
+        width: '100%',
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 6,
+      }}
+    >
+      <Card sx={{ minWidth: 700, borderRadius: 4, boxShadow: 6, background: 'linear-gradient(90deg, #e3f2fd 0%, #fce4ec 100%)' }}>
+        <CardContent>
+          <Stepper
+            activeStep={activeStep}
+            alternativeLabel
+            sx={{ mb: 4, bgcolor: 'transparent' }}
+            connector={null}
+          >
+            {steps.map((step, idx) => (
+              <Step key={step.label}>
+                <StepLabel icon={step.icon}>{step.label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+          {error && <Alert severity="error">{error}</Alert>}
+          {success && <Snackbar open autoHideDuration={3000} onClose={() => setSuccess(null)} message={success} />}
+          {activeStep === 0 && (
+            <Box>
+              <TextField
+                label="PMS Code"
+                value={pmsCode}
+                onChange={(e) => setPmsCode(e.target.value)}
+                fullWidth
+                sx={{ mb: 2 }}
               />
-            )}
-          </Box>
-        )}
-        {activeStep === 2 && (
-          <Box>
-            <Typography variant="h6">Test Translation</Typography>
-            <TextField
-              label="Sample PMS Message (JSON)"
-              value={testMessage}
-              onChange={(e) => setTestMessage(e.target.value)}
-              fullWidth
-              multiline
-              minRows={4}
-            />
-            <Button sx={{ mt: 2 }} variant="contained" onClick={handleNext} disabled={loading}>
-              {loading ? <CircularProgress size={24} /> : 'Run Test'}
-            </Button>
-            {validationErrors && (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                <strong>Validation Errors:</strong>
-                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{typeof validationErrors === 'string' ? validationErrors : JSON.stringify(validationErrors, null, 2)}</pre>
-              </Alert>
-            )}
-            {translationResult && (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle1">Result:</Typography>
-                <pre>{JSON.stringify(translationResult, null, 2)}</pre>
-              </Box>
-            )}
-          </Box>
-        )}
-        <Box sx={{ mt: 4 }}>
-          <Button disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
-            Back
-          </Button>
-          {activeStep < steps.length - 1 && (
-            <Button variant="contained" onClick={handleNext} disabled={activeStep === 0 && !pmsCode || loading}>
-              Next
-            </Button>
+            </Box>
           )}
-        </Box>
-      </Box>
+          {activeStep === 1 && (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>Mapping Editor</Typography>
+              {loading ? <CircularProgress /> : (
+                <MappingEditor
+                  mapping={mapping}
+                  onChange={handleMappingChange}
+                  onSave={handleMappingSave}
+                />
+              )}
+            </Box>
+          )}
+          {activeStep === 2 && (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>Test Translation</Typography>
+              <TextField
+                label="Sample PMS Message (JSON)"
+                value={testMessage}
+                onChange={(e) => setTestMessage(e.target.value)}
+                fullWidth
+                multiline
+                minRows={4}
+                sx={{ mb: 2 }}
+              />
+              <Button sx={{ mt: 2 }} variant="contained" onClick={handleNext} disabled={loading}>
+                {loading ? <CircularProgress size={24} /> : 'Run Test'}
+              </Button>
+              {validationErrors && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  <strong>Validation Errors:</strong>
+                  <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{typeof validationErrors === 'string' ? validationErrors : JSON.stringify(validationErrors, null, 2)}</pre>
+                </Alert>
+              )}
+              {translationResult && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle1">Result:</Typography>
+                  <pre>{JSON.stringify(translationResult, null, 2)}</pre>
+                </Box>
+              )}
+            </Box>
+          )}
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
+            <Button disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
+              Back
+            </Button>
+            {activeStep < steps.length - 1 && (
+              <Button variant="contained" onClick={handleNext} disabled={activeStep === 0 && !pmsCode || loading}>
+                Next
+              </Button>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
     </Box>
   );
 } 
