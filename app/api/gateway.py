@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
 import logging
 from app.plugins.manager import PluginManager
 from app.outbound.sender import send_rgbridge_message
 from app.mapping.manager import MappingManager
+from app.api.auth import api_key_auth
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(api_key_auth)])
 logger = logging.getLogger("gateway_api")
 
 @router.post("/pms/{pmscode}")
@@ -16,9 +17,16 @@ async def receive_pms_message(pmscode: str, request: Request):
         logger.error(f"Plugin load failed for PMS '{pmscode}': {e}")
         raise HTTPException(status_code=404, detail=f"PMS plugin '{pmscode}' not found")
 
-    if not plugin.validate(body):
+    # Enhanced validation: return errors to UI
+    try:
+        is_valid = plugin.validate(body)
+    except Exception as e:
+        logger.error(f"Validation exception for PMS '{pmscode}': {e}")
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+
+    if not is_valid:
         logger.warning(f"Validation failed for PMS '{pmscode}'")
-        raise HTTPException(status_code=422, detail="Payload validation failed")
+        return {"status": "error", "validation": False, "errors": "Payload validation failed"}, 422
 
     result = plugin.translate(body)
     logger.info(f"Translation successful for PMS '{pmscode}'")

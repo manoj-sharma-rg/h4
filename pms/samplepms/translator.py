@@ -2,8 +2,16 @@ import logging
 import json
 from app.plugins.base_translator import BaseTranslator
 from app.mapping.manager import MappingManager
+from app.validation.schema_validator import SchemaValidator
+from pydantic import BaseModel
 
 logger = logging.getLogger("samplepms_translator")
+
+# Define a sample Pydantic model for PMS JSON schema
+class SamplePMSModel(BaseModel):
+    pms_field_1: str
+    pms_field_2: str
+    pms_field_3: dict
 
 class Translator(BaseTranslator):
     def translate(self, pms_payload: bytes) -> dict:
@@ -30,8 +38,15 @@ class Translator(BaseTranslator):
 
     def validate(self, pms_payload: bytes) -> bool:
         logger.info(f"Validating payload of length {len(pms_payload)}")
-        # Dummy validation
-        return True
+        try:
+            pms_data = json.loads(pms_payload.decode("utf-8"))
+        except Exception as e:
+            logger.error(f"Failed to parse PMS payload as JSON: {e}")
+            return False
+        is_valid, errors = SchemaValidator.validate_json(pms_data, SamplePMSModel)
+        if not is_valid:
+            logger.warning(f"Validation errors: {errors}")
+        return is_valid
 
     def get_mapping(self) -> dict:
         logger.info("Loading mapping using MappingManager")

@@ -13,10 +13,12 @@ export default function OnboardingWizard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [validationErrors, setValidationErrors] = useState(null);
 
   const handleNext = async () => {
     setError(null);
     setSuccess(null);
+    setValidationErrors(null);
     if (activeStep === 0 && pmsCode) {
       setLoading(true);
       try {
@@ -40,9 +42,16 @@ export default function OnboardingWizard() {
           headers: { 'Content-Type': 'application/json' },
           body: testMessage,
         });
-        if (!res.ok) throw new Error('Translation failed');
         const data = await res.json();
-        setTranslationResult(data);
+        if (!res.ok) {
+          if (data && data.errors) {
+            setValidationErrors(data.errors);
+          } else {
+            setError('Translation failed');
+          }
+        } else {
+          setTranslationResult(data);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -55,6 +64,7 @@ export default function OnboardingWizard() {
   const handleBack = () => {
     setError(null);
     setSuccess(null);
+    setValidationErrors(null);
     setActiveStep((prev) => prev - 1);
   };
 
@@ -128,6 +138,12 @@ export default function OnboardingWizard() {
             <Button sx={{ mt: 2 }} variant="contained" onClick={handleNext} disabled={loading}>
               {loading ? <CircularProgress size={24} /> : 'Run Test'}
             </Button>
+            {validationErrors && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                <strong>Validation Errors:</strong>
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{typeof validationErrors === 'string' ? validationErrors : JSON.stringify(validationErrors, null, 2)}</pre>
+              </Alert>
+            )}
             {translationResult && (
               <Box sx={{ mt: 2 }}>
                 <Typography variant="subtitle1">Result:</Typography>
