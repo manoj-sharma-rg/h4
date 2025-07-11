@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
 import logging
 from app.plugins.manager import PluginManager
 from app.outbound.sender import send_rgbridge_message
+from app.mapping.manager import MappingManager
+from app.api.auth import api_key_auth
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(api_key_auth)])
 logger = logging.getLogger("gateway_api")
 
 @router.post("/pms/{pmscode}")
@@ -15,9 +17,16 @@ async def receive_pms_message(pmscode: str, request: Request):
         logger.error(f"Plugin load failed for PMS '{pmscode}': {e}")
         raise HTTPException(status_code=404, detail=f"PMS plugin '{pmscode}' not found")
 
-    if not plugin.validate(body):
+    # Enhanced validation: return errors to UI
+    try:
+        is_valid = plugin.validate(body)
+    except Exception as e:
+        logger.error(f"Validation exception for PMS '{pmscode}': {e}")
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+
+    if not is_valid:
         logger.warning(f"Validation failed for PMS '{pmscode}'")
-        raise HTTPException(status_code=422, detail="Payload validation failed")
+        return {"status": "error", "validation": False, "errors": "Payload validation failed"}, 422
 
     result = plugin.translate(body)
     logger.info(f"Translation successful for PMS '{pmscode}'")
@@ -44,3 +53,25 @@ async def receive_pms_message(pmscode: str, request: Request):
         "outbound_response": response_text,
         "message": "Translation and delivery completed."
     }
+
+@router.get("/mapping/{pmscode}")
+async def get_mapping(pmscode: str):
+    try:
+        mapping = MappingManager.load_mapping(pmscode)
+        return mapping
+    except FileNotFoundError:
+        logger.error(f"Mapping not found for PMS '{pmscode}'")
+        raise HTTPException(status_code=404, detail=f"Mapping for PMS '{pmscode}' not found")
+    except Exception as e:
+        logger.error(f"Error loading mapping for PMS '{pmscode}': {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.put("/mapping/{pmscode}")
+async def put_mapping(pmscode: str, request: Request):
+    try:
+        mapping = await request.json()
+        MappingManager.save_mapping(pmscode, mapping)
+        return {"status": "success", "message": f"Mapping for PMS '{pmscode}' saved."}
+    except Exception as e:
+        logger.error(f"Failed to save mapping for PMS '{pmscode}': {e}")
+        raise HTTPException(status_code=500, detail="Failed to save mapping")
