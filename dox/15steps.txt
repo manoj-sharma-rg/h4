@@ -23,4 +23,6 @@ api gateway : new or old
 db entry for integration
 pricing type support
 attributes support
+add a tab in wizard before last page
+
 

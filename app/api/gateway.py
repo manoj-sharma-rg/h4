@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, HTTPException
 import logging
 from app.plugins.manager import PluginManager
 from app.outbound.sender import send_rgbridge_message
+from app.mapping.manager import MappingManager
 
 router = APIRouter()
 logger = logging.getLogger("gateway_api")
@@ -44,3 +45,15 @@ async def receive_pms_message(pmscode: str, request: Request):
         "outbound_response": response_text,
         "message": "Translation and delivery completed."
     }
+
+@router.get("/mapping/{pmscode}")
+async def get_mapping(pmscode: str):
+    try:
+        mapping = MappingManager.load_mapping(pmscode)
+        return mapping
+    except FileNotFoundError:
+        logger.error(f"Mapping not found for PMS '{pmscode}'")
+        raise HTTPException(status_code=404, detail=f"Mapping for PMS '{pmscode}' not found")
+    except Exception as e:
+        logger.error(f"Error loading mapping for PMS '{pmscode}': {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
